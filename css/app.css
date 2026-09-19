@@ -1,0 +1,372 @@
+/* ============================================================
+   SMALL POTATOES — app chrome
+   Loaded after theme.css, which is a verbatim copy of the house
+   style and is never edited. Everything here goes through a
+   var(); the few app-specific measurements are declared as
+   tokens at the top rather than sprinkled through the rules.
+   ============================================================ */
+
+:root {
+  --mascot-lg: 96px;          /* smaller than the siblings: the page is the point, not the potato */
+  --tabbar-h: 54px;
+  --hairline: 1px;
+  --tap-min: 44px;            /* apple's minimum comfortable target */
+  --app-max: 960px;           /* an ipad in landscape, with margins */
+  --line-h: 40px;             /* one ruled line; handwriting with a pencil sits in this */
+  --lines: 4;                 /* per card, overridden inline as the ink grows */
+  --leave-ms: 1400ms;         /* how long the ink takes to go */
+  --card-max: 720px;          /* one card at a time, so it never sprawls in landscape */
+  --dot: 8px;
+  --zzz-ms: 3200ms;           /* one drift of a z, asleep */
+}
+
+/* The house style frames a page in a fake macOS window. This is an app on a
+   home screen, so it runs full-bleed instead and the window chrome is
+   dropped. Tokens, type and components are unchanged. */
+body {
+  padding: 0;
+  overscroll-behavior-y: none;
+}
+
+.app {
+  max-width: var(--app-max);
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.screens {
+  flex: 1;
+  padding: var(--s4);
+  padding-top: calc(var(--s4) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--tabbar-h) + var(--s7) + env(safe-area-inset-bottom));
+}
+
+.screen { display: none; }
+.screen.is-active { display: block; }
+
+/* The `hidden` attribute is only a `display: none` in the browser's own
+   stylesheet, so any rule here that sets `display` on the same element beats
+   it. Restated as an author rule so `hidden` means hidden everywhere. */
+[hidden] { display: none !important; }
+
+/* ---------- the top of a tab ---------- */
+
+.welcome {
+  text-align: center;
+  padding: var(--s4) 0 var(--s3);
+}
+
+.mascot-wrap {
+  position: relative;
+  display: block;
+  width: var(--mascot-lg);
+  margin: 0 auto var(--s4);
+}
+
+.welcome-mascot {
+  width: var(--mascot-lg);
+  height: var(--mascot-lg);
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* Asleep. Three z's drift up from beside the sprout, one after another, and
+   only once the evening is closed. Nothing on the page moves before then. */
+.zzz {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: calc(var(--s3) * -1);
+  width: var(--s6);
+  height: var(--s7);
+  pointer-events: none;
+}
+.screen.is-closed .zzz { display: block; }
+.zzz i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-style: normal;
+  font-size: var(--fs-sm);
+  color: var(--accent);
+  opacity: 0;
+  animation: zzz-drift var(--zzz-ms) ease-out infinite;
+}
+.zzz i:nth-child(2) { animation-delay: calc(var(--zzz-ms) / 3); font-size: var(--fs-base); }
+.zzz i:nth-child(3) { animation-delay: calc(var(--zzz-ms) * 2 / 3); font-size: var(--fs-lg); }
+
+@keyframes zzz-drift {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  15%  { opacity: 0.9; }
+  100% { transform: translate(var(--s4), calc(var(--s7) * -1)); opacity: 0; }
+}
+
+/* Still asleep, just not drifting. The house sheet stops all animation under
+   reduced motion, which would leave the z's at opacity 0; show them instead. */
+@media (prefers-reduced-motion: reduce) {
+  .zzz i { animation: none; opacity: 0.7; }
+  .zzz i:nth-child(2) { transform: translate(var(--s2), calc(var(--s4) * -1)); }
+  .zzz i:nth-child(3) { transform: translate(var(--s4), calc(var(--s6) * -1)); }
+}
+
+.welcome-greeting {
+  margin: 0 0 var(--s3);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.welcome-quip {
+  margin: 0 auto;
+  max-width: 38ch;
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.day-label {
+  margin: 0 0 var(--s5);
+  text-align: center;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.section-title {
+  margin: 0 0 var(--s3);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ---------- the walk ---------- */
+
+.walk,
+.closed {
+  max-width: var(--card-max);
+  margin: 0 auto;
+}
+
+/* One card at a time. The others stay in the DOM with their ink. */
+.page { display: none; min-width: 0; }
+.page.is-current { display: block; }
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--s2);
+  margin: var(--s2) 0 var(--s3);
+}
+.dot {
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: 50%;
+  border: var(--hairline) solid var(--border-strong);
+  background: transparent;
+}
+.dot.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.walk-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+.walk-actions .btn { flex: 1; }
+.walk-actions .link-btn { flex: none; }
+
+/* Doubled selectors on purpose: .btn is declared further down this file and
+   would otherwise win the tie and paint "next" as a plain button. */
+.btn.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-window);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  letter-spacing: 0.06em;
+}
+.btn.btn-primary:hover {
+  background: var(--accent-bright);
+  border-color: var(--accent-bright);
+}
+/* The closing button is quieter than "next": a door, not a push. */
+.btn.btn-primary.btn-close {
+  background: var(--surface);
+  border-color: var(--accent-dim);
+  color: var(--accent-bright);
+  font-weight: 400;
+}
+.btn.btn-primary.btn-close:hover { background: var(--surface-hover); }
+
+/* ---------- closed for the day ---------- */
+
+.closed {
+  text-align: center;
+  padding: var(--s5) 0;
+}
+.closed-line {
+  margin: 0 0 var(--s3);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.page-prompt {
+  margin: 0 0 var(--s3);
+  font-size: var(--fs-base);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* The paper. Ruled with the border colour so the lines are there and not
+   there, in both themes. Height is a number of lines, set inline. */
+.paper {
+  position: relative;
+  height: calc(var(--lines) * var(--line-h));
+  background-color: var(--surface);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--line-h) - var(--hairline)),
+    var(--border) calc(var(--line-h) - var(--hairline)),
+    var(--border) var(--line-h)
+  );
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  transition: height 0.2s ease, opacity var(--leave-ms) ease;
+}
+.paper.is-rubbing { border-color: var(--accent-dim); }
+.paper.is-leaving { opacity: 0; }
+
+.ink {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--text);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  cursor: crosshair;
+}
+
+/* ---------- tools ---------- */
+
+.tools {
+  display: flex;
+  gap: var(--s1);
+  margin-top: var(--s1);
+}
+
+.link-btn {
+  background: none;
+  border: 0;
+  padding: var(--s2);
+  min-height: var(--tap-min);
+  color: var(--text-faint);
+  font: inherit;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.link-btn:hover { color: var(--accent-bright); }
+.link-btn[disabled] { opacity: 0.35; cursor: default; }
+.link-btn.is-on {
+  color: var(--accent-bright);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 4px;
+}
+.tools .tool:last-child { margin-left: auto; }
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: block;
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--s3) var(--s4);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover { background: var(--surface-hover); }
+.btn[disabled] { opacity: 0.5; cursor: default; }
+
+/* ---------- update banner ---------- */
+
+.update-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  z-index: 11;
+  width: 100%;
+  max-width: var(--app-max);
+  margin: 0 auto;
+  min-height: var(--tap-min);
+  padding: var(--s3) var(--s4);
+  border: 0;
+  border-top: var(--hairline) solid var(--accent-dim);
+  background: var(--surface);
+  color: var(--accent-bright);
+  font: inherit;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.04em;
+  text-align: center;
+  cursor: pointer;
+}
+.update-banner:hover { background: var(--surface-hover); }
+
+/* ---------- tab bar ---------- */
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  margin: 0 auto;
+  max-width: var(--app-max);
+  background: var(--bg-window);
+  border-top: var(--hairline) solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tab {
+  flex: 1;
+  min-height: var(--tabbar-h);
+  display: grid;
+  place-items: center;
+  padding: var(--s2);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-decoration: none;
+  border-top: var(--s1) solid transparent;
+}
+.tab:hover { color: var(--text-muted); }
+.tab.is-active {
+  color: var(--accent-bright);
+  border-top-color: var(--accent);
+  background: var(--accent-wash);
+}

@@ -1,0 +1,573 @@
+/* ============================================================
+   POTATO HOUSE STYLE
+   A dark terminal-flavoured theme for standalone HTML pages.
+   Paste this whole block inside a single <style> tag.
+   ============================================================ */
+
+/* ---------- 1. TOKENS ---------- */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces — each step is a distinct elevation, don't invent new ones */
+  --bg:            #14111d;  /* page */
+  --bg-window:     #1a1626;  /* the window shell */
+  --surface:       #221d31;  /* cards, rows, inputs */
+  --surface-hover: #2a2340;
+  --surface-sunk:  #100e18;  /* progress track, code blocks */
+
+  /* Lines */
+  --border:        #302943;
+  --border-strong: #443a5e;
+
+  /* Text — three levels only */
+  --text:          #e6e1f2;
+  --text-muted:    #9c94b3;
+  --text-faint:    #8a82a3;
+
+  /* Accent */
+  --accent:        #a982f5;
+  --accent-bright: #c4a6ff;
+  --accent-dim:    #6f5a9e;
+  --accent-wash:   rgba(169, 130, 245, 0.10);
+  --accent-wash-2: rgba(169, 130, 245, 0.18);
+
+  /* Status — desaturated so they sit inside the purple world */
+  --ok:      #5ed3a0;
+  --warn:    #efc06b;
+  --danger:  #f08080;
+  --info:    #79b8f3;
+  --ok-wash:     rgba(94, 211, 160, 0.12);
+  --warn-wash:   rgba(239, 192, 107, 0.12);
+  --danger-wash: rgba(240, 128, 128, 0.12);
+  --info-wash:   rgba(121, 184, 243, 0.12);
+
+  /* Type */
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono",
+               Menlo, Consolas, "Liberation Mono", monospace;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Inter, Roboto, "Helvetica Neue", sans-serif;
+
+  --fs-xs:   13px;
+  --fs-sm:   15px;
+  --fs-base: 17px;
+  --fs-lg:   19px;
+  --fs-xl:   23px;
+  --fs-2xl:  29px;
+
+  /* Spacing — 4px scale, use these not arbitrary values */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+
+  /* Shape */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+
+  --shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.65);
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+/* Light variant. Add class="light" to <html> to force it. */
+:root.light {
+  color-scheme: light;
+  --bg:            #f5f3fa;
+  --bg-window:     #ffffff;
+  --surface:       #f2eefb;
+  --surface-hover: #e8e1f7;
+  --surface-sunk:  #e6e0f2;
+  --border:        #ded6ee;
+  --border-strong: #c2b5de;
+  --text:          #1c1729;
+  --text-muted:    #5d5578;
+  --text-faint:    #6a6282;
+  --accent:        #6d3fd1;
+  --accent-bright: #5527bd;
+  --accent-dim:    #9c85cf;
+  --accent-wash:   rgba(109, 63, 209, 0.08);
+  --accent-wash-2: rgba(109, 63, 209, 0.15);
+  --ok:      #0d6647;
+  --warn:    #8a6100;
+  --danger:  #b3261e;
+  --info:    #175cd3;
+  --ok-wash:     rgba(13, 102, 71, 0.10);
+  --warn-wash:   rgba(138, 97, 0, 0.10);
+  --danger-wash: rgba(179, 38, 30, 0.10);
+  --info-wash:   rgba(23, 92, 211, 0.10);
+  --shadow: 0 18px 48px -20px rgba(40, 20, 80, 0.28);
+}
+
+/* Follow the OS unless a theme class is set explicitly. */
+@media (prefers-color-scheme: light) {
+  :root:not(.dark):not(.light) {
+    color-scheme: light;
+    --bg:            #f5f3fa;
+    --bg-window:     #ffffff;
+    --surface:       #f2eefb;
+    --surface-hover: #e8e1f7;
+    --surface-sunk:  #e6e0f2;
+    --border:        #ded6ee;
+    --border-strong: #c2b5de;
+    --text:          #1c1729;
+    --text-muted:    #5d5578;
+    --text-faint:    #6a6282;
+    --accent:        #6d3fd1;
+    --accent-bright: #5527bd;
+    --accent-dim:    #9c85cf;
+    --accent-wash:   rgba(109, 63, 209, 0.08);
+    --accent-wash-2: rgba(109, 63, 209, 0.15);
+    --ok:      #0d6647;
+    --warn:    #8a6100;
+    --danger:  #b3261e;
+    --info:    #175cd3;
+    --ok-wash:     rgba(13, 102, 71, 0.10);
+    --warn-wash:   rgba(138, 97, 0, 0.10);
+    --danger-wash: rgba(179, 38, 30, 0.10);
+    --info-wash:   rgba(23, 92, 211, 0.10);
+    --shadow: 0 18px 48px -20px rgba(40, 20, 80, 0.28);
+  }
+}
+
+/* ---------- 2. BASE ---------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: var(--s6) var(--s4) var(--s8);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Soft violet glow behind the window. Purely decorative. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% -5%, var(--accent-wash), transparent 70%);
+  z-index: 0;
+}
+body > * { position: relative; z-index: 1; }
+
+a {
+  color: var(--accent-bright);
+  text-decoration-color: var(--accent-dim);
+  text-underline-offset: 3px;
+}
+a:hover { text-decoration-color: currentColor; }
+
+:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--r-sm); }
+
+code, kbd, pre { font-family: var(--font-mono); }
+code {
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 1px 5px;
+  font-size: 0.9em;
+}
+pre {
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s4);
+  overflow-x: auto;
+  line-height: 1.55;
+}
+pre code { background: none; border: 0; padding: 0; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: var(--s5) 0;
+}
+
+/* ---------- 3. WINDOW SHELL ---------- */
+
+.window {
+  max-width: 880px;
+  margin: 0 auto;
+  background: var(--bg-window);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(var(--surface), var(--bg-window));
+}
+.titlebar .lights { display: flex; gap: 7px; }
+.titlebar .lights i {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  display: block;
+}
+.titlebar .lights i:nth-child(1) { background: #ff5f57; }
+.titlebar .lights i:nth-child(2) { background: #febc2e; }
+.titlebar .lights i:nth-child(3) { background: #29c840; }
+.titlebar .path {
+  font-size: var(--fs-sm);
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+
+.window-body { padding: var(--s6) var(--s5); }
+
+/* ---------- 4. PAGE HEADER + MASCOT ---------- */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  margin-bottom: var(--s6);
+}
+.page-header .mascot {
+  flex: none;
+  width: 56px; height: 56px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+}
+.page-header .mascot svg { width: 100%; height: 100%; display: block; }
+
+.page-title {
+  margin: 0 0 var(--s2);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+}
+.page-subtitle {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.page-subtitle .accent { color: var(--accent); }
+
+/* ---------- 5. PROGRESS ---------- */
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s4) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--s5);
+}
+.progress .label {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.16em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  flex: none;
+}
+.progress .track {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.progress .fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent-bright));
+  transition: width 0.4s ease;
+}
+.progress .value {
+  flex: none;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-bright);
+  min-width: 4ch;
+  text-align: right;
+}
+
+/* ---------- 6. SECTIONS ---------- */
+
+.section { margin-bottom: var(--s5); }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  padding: var(--s2) 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.section-header .badge { flex: none; }
+.section-header .title {
+  flex: 1;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text);
+}
+.section-header .count {
+  font-size: var(--fs-sm);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.section-header .chevron {
+  color: var(--text-faint);
+  transition: transform 0.2s ease;
+  font-size: 12px;
+}
+.section[data-collapsed="true"] .chevron { transform: rotate(-90deg); }
+.section[data-collapsed="true"] .section-body { display: none; }
+
+.section-body { padding-top: var(--s2); }
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+  background: var(--accent-wash-2);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent-bright);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge.ok     { background: var(--ok-wash);     border-color: var(--ok);     color: var(--ok); }
+.badge.warn   { background: var(--warn-wash);   border-color: var(--warn);   color: var(--warn); }
+.badge.danger { background: var(--danger-wash); border-color: var(--danger); color: var(--danger); }
+.badge.info   { background: var(--info-wash);   border-color: var(--info);   color: var(--info); }
+.badge.muted  { background: var(--surface);     border-color: var(--border); color: var(--text-muted); }
+
+/* ---------- 7. NOTE / CALLOUT ---------- */
+
+.note {
+  border-left: 2px solid var(--accent-dim);
+  background: var(--accent-wash);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  padding: var(--s3) var(--s4);
+  margin: var(--s3) 0 var(--s4);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.note strong { color: var(--text); font-weight: 600; }
+.note.ok     { border-left-color: var(--ok);     background: var(--ok-wash); }
+.note.warn   { border-left-color: var(--warn);   background: var(--warn-wash); }
+.note.danger { border-left-color: var(--danger); background: var(--danger-wash); }
+.note.info   { border-left-color: var(--info);   background: var(--info-wash); }
+
+/* ---------- 8. CHECKLIST ---------- */
+
+.checklist { list-style: none; margin: 0; padding: 0; }
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s3);
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.check:hover { background: var(--surface); border-color: var(--border); }
+
+.check input[type="checkbox"] {
+  appearance: none;
+  flex: none;
+  width: 17px; height: 17px;
+  margin: 3px 0 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--surface-sunk);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.check input[type="checkbox"]::after {
+  content: "";
+  width: 9px; height: 5px;
+  border-left: 2px solid var(--bg-window);
+  border-bottom: 2px solid var(--bg-window);
+  transform: rotate(-45deg) scale(0);
+  transition: transform 0.15s ease;
+}
+.check input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.check input[type="checkbox"]:checked::after { transform: rotate(-45deg) scale(1); }
+
+.check .text { flex: 1; line-height: 1.55; }
+.check input:checked ~ .text {
+  color: var(--text-faint);
+  text-decoration: line-through;
+  text-decoration-color: var(--accent-dim);
+}
+
+/* ---------- 9. CARDS + STATS ---------- */
+
+.grid {
+  display: grid;
+  gap: var(--s3);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s4);
+}
+.card-title {
+  margin: 0 0 var(--s2);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.stat .value {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--accent-bright);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.stat .delta { font-size: var(--fs-sm); color: var(--text-muted); }
+.stat .delta.up   { color: var(--ok); }
+.stat .delta.down { color: var(--danger); }
+
+/* ---------- 10. TABLES ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+thead th {
+  text-align: left;
+  padding: var(--s3) var(--s4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 600;
+  white-space: nowrap;
+}
+tbody td {
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--surface); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- 11. PROSE (long-form reading) ---------- */
+
+.prose {
+  font-family: var(--font-sans);
+  font-size: 15.5px;
+  line-height: 1.75;
+  max-width: 68ch;
+  color: var(--text);
+}
+.prose h1, .prose h2, .prose h3 {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--accent-bright);
+  line-height: 1.3;
+  margin: var(--s6) 0 var(--s3);
+}
+.prose h1 { font-size: var(--fs-xl); text-transform: uppercase; letter-spacing: 0.08em; }
+.prose h2 { font-size: var(--fs-lg); }
+.prose h3 { font-size: var(--fs-base); color: var(--text); }
+.prose > :first-child { margin-top: 0; }
+.prose p { margin: 0 0 var(--s4); }
+.prose ul, .prose ol { margin: 0 0 var(--s4); padding-left: var(--s5); }
+.prose li { margin-bottom: var(--s2); }
+.prose li::marker { color: var(--accent-dim); }
+.prose blockquote {
+  margin: var(--s4) 0;
+  padding-left: var(--s4);
+  border-left: 2px solid var(--accent-dim);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ---------- 12. FOOTER ---------- */
+
+.page-footer {
+  margin-top: var(--s6);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  letter-spacing: 0.06em;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s3);
+  flex-wrap: wrap;
+}
+
+/* ---------- 13. RESPONSIVE ---------- */
+
+@media (max-width: 640px) {
+  body { padding: var(--s3) var(--s2) var(--s6); }
+  .window { border-radius: var(--r-md); }
+  .window-body { padding: var(--s4) var(--s3); }
+  .page-header { gap: var(--s3); }
+  .page-header .mascot { width: 40px; height: 40px; }
+  .page-title { font-size: var(--fs-lg); }
+  .progress { flex-wrap: wrap; }
+  .progress .track { order: 3; flex-basis: 100%; }
+}
+
+/* ---------- 14. MOTION + PRINT ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  body { background: #fff; color: #000; padding: 0; }
+  body::before { display: none; }
+  .window { box-shadow: none; border: 0; max-width: none; }
+  .titlebar, .page-footer { display: none; }
+  .section[data-collapsed="true"] .section-body { display: block !important; }
+  a { color: #000; text-decoration: underline; }
+  .card, .note, .table-wrap { break-inside: avoid; }
+}

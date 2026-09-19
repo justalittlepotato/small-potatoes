@@ -1,0 +1,10 @@
+{
+  "name": "small-potatoes",
+  "private": true,
+  "type": "module",
+  "description": "a handwritten potato journal for the ipad. no dependencies, no build step — this file exists so node reads the js as modules when running the tests.",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8790"
+  }
+}
