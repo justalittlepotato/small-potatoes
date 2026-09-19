@@ -11,6 +11,7 @@
 
 import {
   thin, farEnough, widthFor, eraseAt, scaleStrokes, bottomOf, FLAT_PRESSURE,
+  smoothPressure, curvePath, newestPiece, pieceAt,
 } from './strokes.js';
 
 const HISTORY_MAX = 40;
@@ -41,14 +42,18 @@ export function createInk(canvas, options = {}) {
 
   // ---------- drawing ----------
 
-  function segment(a, b) {
+  // One piece of a stroke: a quadratic curve, stroked on its own so the
+  // width can change along the stroke. Round caps hide the seams.
+  function drawPiece(p) {
+    if (!p) return;
+    const [from, control, to, width] = p;
     ctx.strokeStyle = ink;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = widthFor((a[2] + b[2]) / 2);
+    ctx.lineWidth = width;
     ctx.beginPath();
-    ctx.moveTo(a[0], a[1]);
-    ctx.lineTo(b[0], b[1]);
+    ctx.moveTo(from[0], from[1]);
+    ctx.quadraticCurveTo(control[0], control[1], to[0], to[1]);
     ctx.stroke();
   }
 
@@ -61,7 +66,7 @@ export function createInk(canvas, options = {}) {
 
   function drawStroke(stroke) {
     if (stroke.length === 1) { dot(stroke[0]); return; }
-    for (let i = 1; i < stroke.length; i += 1) segment(stroke[i - 1], stroke[i]);
+    for (const p of curvePath(stroke)) drawPiece(p);
   }
 
   function redraw() {
@@ -92,12 +97,14 @@ export function createInk(canvas, options = {}) {
 
   // ---------- pointer handling ----------
 
-  function pointOf(event) {
+  // A point from an event. `previous` is the last kept pressure, so the width
+  // follows the pen smoothly rather than jumping with every sample.
+  function pointOf(event, previous = null) {
     const rect = canvas.getBoundingClientRect();
-    const pressure = event.pointerType === 'pen'
+    const raw = event.pointerType === 'pen'
       ? Math.max(0.05, Math.min(1, event.pressure || 0))
       : FLAT_PRESSURE;
-    return [event.clientX - rect.left, event.clientY - rect.top, pressure];
+    return [event.clientX - rect.left, event.clientY - rect.top, smoothPressure(previous, raw)];
   }
 
   function remember() {
@@ -176,12 +183,15 @@ export function createInk(canvas, options = {}) {
 
     event.preventDefault();
     for (const sample of samples(event)) {
-      const p = pointOf(sample);
-      if (active.kind === 'erase') { rubAt(p); continue; }
+      if (active.kind === 'erase') { rubAt(pointOf(sample)); continue; }
       const last = live[live.length - 1];
+      const p = pointOf(sample, last[2]);
       if (!farEnough(last, p)) continue;
       live.push(p);
-      segment(last, p);
+      // The curve through the previous point is now known; draw it. The
+      // stub to the pen's current position waits until the pen lifts, so
+      // the visible line trails the tip by half a sample. Nobody notices.
+      drawPiece(newestPiece(live));
     }
   }
 
@@ -200,11 +210,14 @@ export function createInk(canvas, options = {}) {
     if (live) {
       // The last sample may have been skipped as too close; the lift point
       // is where the stroke really ends.
-      const end = pointOf(event);
-      if (farEnough(live[live.length - 1], end)) live.push(end);
+      const last = live[live.length - 1];
+      const end = pointOf(event, last[2]);
+      if (farEnough(last, end)) live.push(end);
       remember();
       strokes = [...strokes, thin(live)];
       live = null;
+      // A full redraw rather than just the closing stub: the thinned stroke
+      // is what will be drawn from now on, so show exactly that.
       redraw();
       onChange();
     }

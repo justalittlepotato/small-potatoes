@@ -92,6 +92,16 @@ test/               node --test, no dependencies
   `ink.load()` scales to the width it is drawn at, so ink keeps its shape
   across portrait and landscape. If you store anything derived from the
   bitmap you have broken this.
+- **The pen is curves, not segments.** A stroke is drawn as quadratic curves
+  through the midpoints of consecutive samples (`curvePath` in
+  `strokes.js`), and pressure is smoothed as points arrive
+  (`smoothPressure`). Straight segments with per-segment width looked
+  jagged and lumpy at writing speed on the real iPad; that was the
+  complaint that led here. The live pen draws `newestPiece` per sample and
+  trails the tip by half a sample; the closing stub is drawn on lift. The
+  feel of the pen is `WIDTH_MIN` and `WIDTH_MAX`, nothing else. There is no
+  native pencil palette: Safari cannot show PencilKit's tool picker to a
+  page, so undo and rub out are the controls, and there is one pen.
 - **`setPointerCapture` is wrapped in a try.** A synthetic pointer event (the
   walkthrough, a test) has no pointer to capture and throws. Real pens work
   either way; the wrap just stops a test crashing a stroke.

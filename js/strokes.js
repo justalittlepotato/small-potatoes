@@ -7,12 +7,17 @@
 // reports at up to 240Hz; without thinning a paragraph is a megabyte.
 export const MIN_GAP = 1.5;
 
-// Line width, css pixels. A narrow range: it should read as a pen, not a brush.
-export const WIDTH_MIN = 2.2;
-export const WIDTH_MAX = 4.6;
+// Line width, css pixels. A narrow range: a gel pen, with a little pressure
+// in it but never fat. These two numbers are the whole feel of the pen.
+export const WIDTH_MIN = 1.3;
+export const WIDTH_MAX = 2.8;
 
 // A finger or a mouse has no real pressure, so it writes at a steady middle.
 export const FLAT_PRESSURE = 0.5;
+
+// How fast the width follows the pressure. Raw pencil pressure jitters from
+// one sample to the next; run through this it glides.
+export const PRESSURE_ALPHA = 0.3;
 
 // How close, in css pixels, the rubber has to pass to a stroke to take it.
 export const ERASE_RADIUS = 12;
@@ -20,6 +25,59 @@ export const ERASE_RADIUS = 12;
 export function widthFor(pressure) {
   const p = Math.min(1, Math.max(0, Number(pressure) || 0));
   return WIDTH_MIN + (WIDTH_MAX - WIDTH_MIN) * p;
+}
+
+// Exponential moving average of pressure. The first point of a stroke has no
+// previous value and is taken as it comes.
+export function smoothPressure(previous, raw, alpha = PRESSURE_ALPHA) {
+  const r = Math.min(1, Math.max(0, Number(raw) || 0));
+  if (previous === null || previous === undefined) return r;
+  return previous + alpha * (r - previous);
+}
+
+// ---------- curves ----------
+//
+// A stroke is drawn as quadratic curves through the midpoints of consecutive
+// samples, each sample being the control point of the curve that passes it.
+// Straight segments between samples show every corner at writing speed;
+// this does not. A piece is [from, control, to, width], and a stroke of n
+// points (n >= 2) is n pieces: a straight stub from the first point to the
+// first midpoint, a curve for each interior point, and a stub from the last
+// midpoint to the last point.
+
+function mid(a, b) {
+  return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+}
+
+function piece(from, control, to, pressure) {
+  return [[from[0], from[1]], [control[0], control[1]], [to[0], to[1]], widthFor(pressure)];
+}
+
+// The piece at index i of the path for a stroke, computed on its own so the
+// live pen can draw one piece per sample without rebuilding the path.
+export function pieceAt(stroke, i) {
+  const n = stroke.length;
+  if (n < 2 || i < 0 || i >= n) return null;
+  if (i === 0) return piece(stroke[0], stroke[0], mid(stroke[0], stroke[1]), stroke[0][2]);
+  if (i === n - 1) return piece(mid(stroke[n - 2], stroke[n - 1]), stroke[n - 1], stroke[n - 1], stroke[n - 1][2]);
+  return piece(mid(stroke[i - 1], stroke[i]), stroke[i], mid(stroke[i], stroke[i + 1]), stroke[i][2]);
+}
+
+export function curvePath(stroke) {
+  const out = [];
+  for (let i = 0; i < stroke.length; i += 1) {
+    const p = pieceAt(stroke, i);
+    if (p) out.push(p);
+  }
+  return out;
+}
+
+// The piece that became final when the last point was appended: with n
+// points, piece n-2 (the curve through the point before the new one; for
+// n = 2, the opening stub). The closing stub, piece n-1, is only final once
+// the pen lifts.
+export function newestPiece(stroke) {
+  return pieceAt(stroke, stroke.length - 2);
 }
 
 // Whether a new point is far enough from the last kept one to be worth keeping.
