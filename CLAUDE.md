@@ -98,8 +98,12 @@ test/               node --test, no dependencies
   (`smoothPressure`). Straight segments with per-segment width looked
   jagged and lumpy at writing speed on the real iPad; that was the
   complaint that led here. The live pen draws `newestPiece` per sample and
-  trails the tip by half a sample; the closing stub is drawn on lift. The
-  feel of the pen is `WIDTH_MIN` and `WIDTH_MAX`, nothing else. There is no
+  trails the tip by half a sample; on lift the whole stroke is redrawn as
+  **one path at one width** (`strokeWidth`, the mean pressure). Stroking
+  the pieces separately at their own widths left a bead at every seam,
+  which she saw as grain. Pressure therefore varies between strokes, not
+  within one. The feel of the pen is `WIDTH_MIN` and `WIDTH_MAX`, nothing
+  else. There is no
   native pencil palette: Safari cannot show PencilKit's tool picker to a
   page, so undo and rub out are the controls, and there is one pen.
 - **`setPointerCapture` is wrapped in a try.** A synthetic pointer event (the

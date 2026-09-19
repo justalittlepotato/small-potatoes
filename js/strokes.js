@@ -72,6 +72,17 @@ export function curvePath(stroke) {
   return out;
 }
 
+// One width for a whole stroke, from its mean pressure. A finished stroke is
+// drawn as a single path at this width: stroking the pieces one by one, each
+// at its own width, leaves a faint bead where their anti-aliased ends
+// overlap, and on a light line over a dark page that reads as grain.
+export function strokeWidth(stroke) {
+  if (stroke.length === 0) return WIDTH_MIN;
+  let sum = 0;
+  for (const p of stroke) sum += Number(p[2]) || 0;
+  return widthFor(sum / stroke.length);
+}
+
 // The piece that became final when the last point was appended: with n
 // points, piece n-2 (the curve through the point before the new one; for
 // n = 2, the opening stub). The closing stub, piece n-1, is only final once

@@ -11,7 +11,7 @@
 
 import {
   thin, farEnough, widthFor, eraseAt, scaleStrokes, bottomOf, FLAT_PRESSURE,
-  smoothPressure, curvePath, newestPiece, pieceAt,
+  smoothPressure, curvePath, newestPiece, strokeWidth,
 } from './strokes.js';
 
 const HISTORY_MAX = 40;
@@ -64,9 +64,21 @@ export function createInk(canvas, options = {}) {
     ctx.fill();
   }
 
+  // A finished stroke: the whole curve as one path at one width, so there
+  // are no seams. (The live pen draws piece by piece and is replaced by
+  // this on lift.)
   function drawStroke(stroke) {
     if (stroke.length === 1) { dot(stroke[0]); return; }
-    for (const p of curvePath(stroke)) drawPiece(p);
+    const path = curvePath(stroke);
+    if (path.length === 0) return;
+    ctx.strokeStyle = ink;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = strokeWidth(stroke);
+    ctx.beginPath();
+    ctx.moveTo(path[0][0][0], path[0][0][1]);
+    for (const [, control, to] of path) ctx.quadraticCurveTo(control[0], control[1], to[0], to[1]);
+    ctx.stroke();
   }
 
   function redraw() {

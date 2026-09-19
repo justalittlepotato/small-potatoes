@@ -3,9 +3,16 @@ import assert from 'node:assert/strict';
 
 import {
   thin, farEnough, widthFor, hitStroke, eraseAt, scaleStrokes, bottomOf,
-  linesNeeded, smoothPressure, curvePath, pieceAt, newestPiece,
+  linesNeeded, smoothPressure, curvePath, pieceAt, newestPiece, strokeWidth,
   WIDTH_MIN, WIDTH_MAX, MIN_GAP,
 } from '../js/strokes.js';
+
+test('a whole stroke has one width, from its mean pressure', () => {
+  assert.equal(strokeWidth([[0, 0, 0], [1, 1, 1]]), widthFor(0.5));
+  assert.equal(strokeWidth([[0, 0, 1]]), WIDTH_MAX);
+  assert.equal(strokeWidth([]), WIDTH_MIN);
+  assert.ok(!Number.isNaN(strokeWidth([[0, 0, undefined]])));
+});
 
 test('the pen is fine: nothing wider than a gel pen', () => {
   assert.ok(WIDTH_MAX <= 3, `${WIDTH_MAX}px is a marker`);
