@@ -5,7 +5,13 @@
 
 // Points closer than this to the previous kept point are dropped. A pencil
 // reports at up to 240Hz; without thinning a paragraph is a megabyte.
-export const MIN_GAP = 1.5;
+export const MIN_GAP = 2;
+
+// How fast the pen's position follows the raw samples. Safari reports pen
+// positions in whole css pixels, and at the scale of a letter a curve
+// snapped to a 1px grid wobbles; run through this the snap averages out.
+// Applied to every sample before thinning, so the lag is a sample or so.
+export const POSITION_ALPHA = 0.55;
 
 // Line width, css pixels. A narrow range: a gel pen, with a little pressure
 // in it but never fat. These two numbers are the whole feel of the pen.
@@ -33,6 +39,17 @@ export function smoothPressure(previous, raw, alpha = PRESSURE_ALPHA) {
   const r = Math.min(1, Math.max(0, Number(raw) || 0));
   if (previous === null || previous === undefined) return r;
   return previous + alpha * (r - previous);
+}
+
+// Exponential moving average of position. `previous` is the last smoothed
+// point (not the last kept one); pressure is passed through untouched.
+export function smoothPoint(previous, raw, alpha = POSITION_ALPHA) {
+  if (!previous) return [raw[0], raw[1], raw[2]];
+  return [
+    previous[0] + alpha * (raw[0] - previous[0]),
+    previous[1] + alpha * (raw[1] - previous[1]),
+    raw[2],
+  ];
 }
 
 // ---------- curves ----------

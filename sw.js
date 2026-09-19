@@ -4,7 +4,7 @@
 // Cache-first on a fixed, versioned list. Bump VERSION whenever any file in
 // ASSETS changes, or the installed app keeps serving the old copy.
 
-const VERSION = 'small-potatoes-v5';
+const VERSION = 'small-potatoes-v6';
 
 const ASSETS = [
   './',

@@ -3,9 +3,28 @@ import assert from 'node:assert/strict';
 
 import {
   thin, farEnough, widthFor, hitStroke, eraseAt, scaleStrokes, bottomOf,
-  linesNeeded, smoothPressure, curvePath, pieceAt, newestPiece, strokeWidth,
+  linesNeeded, smoothPressure, smoothPoint, curvePath, pieceAt, newestPiece, strokeWidth,
   WIDTH_MIN, WIDTH_MAX, MIN_GAP,
 } from '../js/strokes.js';
+
+test('position smoothing takes the wobble out of grid-snapped samples', () => {
+  // A straight diagonal, as safari reports it: whole pixels, so it steps.
+  const raw = [];
+  for (let i = 0; i < 40; i += 1) raw.push([Math.round(i * 0.7), Math.round(i * 0.3), 0.5]);
+  let prev = null;
+  const smoothed = raw.map((p) => (prev = smoothPoint(prev, p)));
+  // Distance of each point from the ideal line y = 3x/7: the smoothed
+  // points wander less than the snapped ones do.
+  const wobble = (pts) => pts.slice(5).reduce((s, [x, y]) => s + Math.abs(y - x * 3 / 7), 0) / (pts.length - 5);
+  assert.ok(wobble(smoothed) < wobble(raw) * 0.75, `raw ${wobble(raw).toFixed(3)} smoothed ${wobble(smoothed).toFixed(3)}`);
+  // It follows: the last smoothed point is within a sample of the last raw one.
+  const [lx, ly] = smoothed[smoothed.length - 1];
+  const [rx, ry] = raw[raw.length - 1];
+  assert.ok(Math.hypot(lx - rx, ly - ry) < 1.5);
+  // Pressure passes straight through, and the first point is taken as is.
+  assert.deepEqual(smoothPoint(null, [3, 4, 0.9]), [3, 4, 0.9]);
+  assert.equal(smoothPoint([0, 0, 0.1], [10, 10, 0.7])[2], 0.7);
+});
 
 test('a whole stroke has one width, from its mean pressure', () => {
   assert.equal(strokeWidth([[0, 0, 0], [1, 1, 1]]), widthFor(0.5));

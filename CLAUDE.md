@@ -102,8 +102,12 @@ test/               node --test, no dependencies
   **one path at one width** (`strokeWidth`, the mean pressure). Stroking
   the pieces separately at their own widths left a bead at every seam,
   which she saw as grain. Pressure therefore varies between strokes, not
-  within one. The feel of the pen is `WIDTH_MIN` and `WIDTH_MAX`, nothing
-  else. There is no
+  within one. Positions are smoothed too (`smoothPoint`, on every sample
+  before thinning): Safari reports pen positions in whole css pixels, and
+  at letter scale a curve through grid-snapped points wobbles, which showed
+  as grain at 2x. The lift point is taken raw so a stroke ends where the pen
+  left the glass. The feel of the pen is `WIDTH_MIN`, `WIDTH_MAX`,
+  `POSITION_ALPHA` and `MIN_GAP`, nothing else. There is no
   native pencil palette: Safari cannot show PencilKit's tool picker to a
   page, so undo and rub out are the controls, and there is one pen.
 - **`setPointerCapture` is wrapped in a try.** A synthetic pointer event (the

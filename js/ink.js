@@ -11,7 +11,7 @@
 
 import {
   thin, farEnough, widthFor, eraseAt, scaleStrokes, bottomOf, FLAT_PRESSURE,
-  smoothPressure, curvePath, newestPiece, strokeWidth,
+  smoothPressure, smoothPoint, curvePath, newestPiece, strokeWidth,
 } from './strokes.js';
 
 const HISTORY_MAX = 40;
@@ -27,6 +27,7 @@ export function createInk(canvas, options = {}) {
 
   let strokes = [];        // committed
   let live = null;         // the stroke under the pen right now
+  let trail = null;        // the smoothed pen position, updated on every sample
   let history = [];        // previous stroke lists, for undo
   let mode = 'draw';       // or 'erase'
   let width = 0;           // css pixels the strokes are currently laid out for
@@ -171,6 +172,7 @@ export function createInk(canvas, options = {}) {
 
     active = { id: event.pointerId, kind: 'draw' };
     live = [p];
+    trail = p;
     dot(p);
   }
 
@@ -197,7 +199,9 @@ export function createInk(canvas, options = {}) {
     for (const sample of samples(event)) {
       if (active.kind === 'erase') { rubAt(pointOf(sample)); continue; }
       const last = live[live.length - 1];
-      const p = pointOf(sample, last[2]);
+      // Every sample moves the smoothed position; only some are kept.
+      trail = smoothPoint(trail, pointOf(sample, trail[2]));
+      const p = trail;
       if (!farEnough(last, p)) continue;
       live.push(p);
       // The curve through the previous point is now known; draw it. The
@@ -222,12 +226,15 @@ export function createInk(canvas, options = {}) {
     if (live) {
       // The last sample may have been skipped as too close; the lift point
       // is where the stroke really ends.
+      // The lift point is taken raw, not smoothed, so the stroke ends where
+      // the pen actually left the glass rather than a sample behind it.
       const last = live[live.length - 1];
       const end = pointOf(event, last[2]);
       if (farEnough(last, end)) live.push(end);
       remember();
       strokes = [...strokes, thin(live)];
       live = null;
+      trail = null;
       // A full redraw rather than just the closing stub: the thinned stroke
       // is what will be drawn from now on, so show exactly that.
       redraw();
