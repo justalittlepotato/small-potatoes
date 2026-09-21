@@ -17,7 +17,7 @@ const MORNING = [
 
 const EVENING = [
   'nothing here is kept. write it anyway.',
-  'three is a suggestion. one is a day.',
+  'three things. they can all be small. they usually are.',
   'the potato has seen the day and thought it was fine.',
   'small potatoes, mostly. that is the point.',
   'this page is gone by morning. so is the day.',

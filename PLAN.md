@@ -43,7 +43,7 @@ stacked; one at a time was asked for on first sight of it, and is better.
 **morning**: one thing to look forward to today, however small; one kind
 thing for the body today.
 
-**evening**: three good things (one is plenty, and the headings say so); one
+**evening**: three good things (three is assumed; the headings do not hedge); one
 rotating prompt from a pool, picked by the date so it holds all evening; and
 *leave it here*, a card for the thing not to carry to bed. Its ink is never
 saved; *time for a schluff* dissolves it and the potato goes to sleep with a

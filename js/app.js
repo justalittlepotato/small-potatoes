@@ -3,9 +3,11 @@
 //
 // Everything is built once for today. If the day changes while the app is
 // open (it was left on the stand overnight), the page reloads on the next
-// return to the foreground and comes up blank, without comment.
+// return to the foreground and comes up blank, on the morning, without
+// comment. Within a day the tabs hand over on their own: a morning closed a
+// few hours ago with nothing since opens on the evening (`landingTab`).
 
-import { dayKey, dayLabel, suggestedTab } from './day.js';
+import { dayKey, dayLabel, landingTab } from './day.js';
 import { morningPrompts, eveningPrompts } from './prompts.js';
 import { morningQuip, eveningQuip, openedQuip, schluffQuip } from './quips.js';
 import { linesNeeded } from './strokes.js';
@@ -51,17 +53,27 @@ function canDraw(event) {
 }
 
 // A tab closed for the day. Keyed by the day so it cannot leak into
-// tomorrow, and swept on start so it does not pile up either.
+// tomorrow, and swept on start so it does not pile up either. The value is
+// the time it was closed, which is what the handover to the evening reads.
 function closedKey(tab) {
   return `${CLOSED_PREFIX}${today}:${tab}`;
 }
 
 function isClosed(tab) {
-  return readSetting(closedKey(tab)) === 'yes';
+  return readSetting(closedKey(tab)) !== null;
+}
+
+// ms since the epoch, null if not closed, 0 if the flag has no readable time
+// (an older version wrote 'yes'): long ago, so it hands over.
+function closedAt(tab) {
+  const value = readSetting(closedKey(tab));
+  if (value === null) return null;
+  const time = Date.parse(value);
+  return Number.isNaN(time) ? 0 : time;
 }
 
 function setClosed(tab, on) {
-  writeSetting(closedKey(tab), on ? 'yes' : null);
+  writeSetting(closedKey(tab), on ? new Date().toISOString() : null);
 }
 
 function sweepClosedFlags() {
@@ -308,10 +320,20 @@ function showTab(tab) {
   window.scrollTo(0, 0);
 }
 
+// The tab the rule wants right now, given the one showing (or none).
+function wantedTab() {
+  return landingTab({
+    now: Date.now(),
+    current: currentTab(),
+    morningClosedAt: closedAt('morning'),
+    eveningClosedAt: closedAt('evening'),
+  });
+}
+
 function route() {
   const tab = currentTab();
   if (!tab) {
-    history.replaceState(null, '', `#${suggestedTab(new Date())}`);
+    history.replaceState(null, '', `#${wantedTab()}`);
     route();
     return;
   }
@@ -320,10 +342,19 @@ function route() {
 
 // ---------- the day ----------
 
-function stillToday() {
-  if (dayKey(new Date()) === today) return;
-  // A new day. The page it belonged to is over; start clean.
-  location.reload();
+// Called on every return to the foreground, and once a minute in case the
+// app never leaves it (an ipad on a stand with the screen kept awake).
+function settle() {
+  if (dayKey(new Date()) !== today) {
+    // A new day. The page it belonged to is over; start clean. The hash
+    // goes first: a reload keeps it, and yesterday's `#evening` would open
+    // this morning on the wrong tab.
+    history.replaceState(null, '', location.pathname + location.search);
+    location.reload();
+    return;
+  }
+  const tab = wantedTab();
+  if (tab !== currentTab()) location.hash = tab;
 }
 
 // ---------- start ----------
@@ -356,10 +387,13 @@ async function start() {
 
   window.addEventListener('hashchange', route);
   route();
+  // A relaunch keeps the hash it was suspended with; the rule still applies.
+  settle();
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') stillToday();
+    if (document.visibilityState === 'visible') settle();
   });
+  setInterval(settle, 60_000);
 
   // Ask the browser not to evict the store under us. Home screen apps are
   // exempt from Safari's seven-day rule anyway; this is belt and braces.

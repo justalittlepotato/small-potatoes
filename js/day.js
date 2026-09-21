@@ -6,6 +6,7 @@
 
 export const DAY_STARTS_AT = 4;   // hour, local time
 export const EVENING_FROM = 14;   // 2pm: after this the evening tab opens first
+export const HANDOVER_HOURS = 3;  // after the morning closes, how long until the evening takes over
 
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const MONTHS = [
@@ -30,6 +31,20 @@ export function dayKey(date) {
 export function suggestedTab(date) {
   const hour = date.getHours();
   return hour >= DAY_STARTS_AT && hour < EVENING_FROM ? 'morning' : 'evening';
+}
+
+// Which tab to show on open, and on every return to the foreground. Pure:
+// `now` and the closed times are ms since the epoch (or null for not closed);
+// `current` is the tab already showing, or null on a cold start.
+//
+// Evening closed: stay on the sleeping potato until 4am. Morning closed a few
+// hours ago with nothing since: the evening takes over on its own, so there
+// is no tab to tap at the end of the day. Otherwise stay put, and with
+// nowhere to stay, let the clock decide.
+export function landingTab({ now, current, morningClosedAt, eveningClosedAt }) {
+  if (eveningClosedAt != null) return 'evening';
+  if (morningClosedAt != null && now - morningClosedAt >= HANDOVER_HOURS * 3_600_000) return 'evening';
+  return current || suggestedTab(new Date(now));
 }
 
 // "friday 19 september", from a day key. No year: this page does not last

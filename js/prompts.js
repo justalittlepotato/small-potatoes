@@ -11,11 +11,12 @@ export const MORNING = [
   { id: 'morning-body', text: 'one kind thing for the body today' },
 ];
 
-// The three good things. One is plenty, and the headings say so.
+// The three good things. Three is the assumption, not an offer: the headings
+// used to hedge ("if there was one", "no pressure") and she asked them not to.
 const GOOD = [
   { id: 'good-1', text: 'a good thing' },
-  { id: 'good-2', text: 'another, if there was one' },
-  { id: 'good-3', text: 'a third, no pressure' },
+  { id: 'good-2', text: 'another' },
+  { id: 'good-3', text: 'and a third' },
 ];
 
 // The pool the fourth card draws from, one a day.

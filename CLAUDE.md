@@ -39,8 +39,15 @@ count, or anything that mentions a previous day.
   label on the last card) and the closed state. The other cards stay in the
   DOM with their ink; only `.is-current` is displayed.
 - **Closed-for-today lives in `localStorage`** as `closed:<day>:<tab>`, keyed
-  by the day so it cannot leak into tomorrow, and swept on start. Ink stays
-  in IndexedDB regardless; *look again* reopens the walk at card one.
+  by the day so it cannot leak into tomorrow, and swept on start. The value
+  is the ISO time it was closed. Ink stays in IndexedDB regardless; *look
+  again* reopens the walk at card one and clears the flag.
+- **The tabs hand over on their own.** `landingTab` in `day.js` is the rule:
+  evening closed, stay on the sleeping potato; morning closed
+  `HANDOVER_HOURS` ago or more, the evening; otherwise stay put, or by the
+  clock on a cold start. `settle()` in `app.js` applies it on every return to
+  the foreground and once a minute. Do not add a tab that has to be tapped
+  at the end of the day; that was the complaint.
 
 ## Layout
 
@@ -119,7 +126,9 @@ test/               node --test, no dependencies
   itself; that is how the extra room was lost on reload once.
 - **A day boundary is 4am, not midnight** (`day.js`). Records are keyed by
   the day string, never by a `Date`. If the app is open across the boundary,
-  the next return to the foreground reloads it blank, without comment.
+  `settle()` reloads it blank, without comment. **It strips the hash first.**
+  A plain `location.reload()` keeps `#evening` from last night, and the
+  morning then opens on a blank evening tab; that happened.
 - **A hidden card has a zero-size canvas.** `show(i)` calls `ink.fit()` on
   the card it reveals, and `showTab` refits the current card, or the ink is
   drawn into nothing. Anything else that reveals a card must do the same.
@@ -160,7 +169,9 @@ there; undo, rub out, clear, more room; *off you go, then* closes the morning, *
 reopens it; reload, it opens closed; on evening, four *next*s reach the
 leave-it card, draw on it, *time for a schluff*, the ink goes and the potato
 sleeps; narrow to phone width; add `class="light"` to `<html>`. Go offline in
-devtools and hard reload: it must still open.
+devtools and hard reload: it must still open. For the handover, set
+`closed:<today>:morning` to an ISO time four hours ago and reload at
+`#morning`: it must land on the evening; one hour ago, it must stay.
 
 On the iPad itself, which nothing here can fake: Add to Home Screen; the
 pencil draws with a palm resting on the glass; a finger scrolls; rotate and

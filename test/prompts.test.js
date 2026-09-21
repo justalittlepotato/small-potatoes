@@ -16,6 +16,16 @@ test('every prompt id on a tab is distinct, because ids are storage keys', () =>
   }
 });
 
+test('the three good things are assumed: no hedging in the headings, and the ids hold', () => {
+  const good = eveningPrompts('2031-09-19').slice(0, 3);
+  assert.deepEqual(good.map((p) => p.id), ['good-1', 'good-2', 'good-3']);
+  for (const p of good) {
+    assert.ok(!/\bif\b/.test(p.text), `"${p.text}" hedges`);
+    assert.ok(!p.text.includes('pressure'), `"${p.text}" hedges`);
+  }
+  assert.ok(!eveningQuip('2031-09-19').includes('suggestion'));
+});
+
 test('only the leave-it card is ephemeral, and it comes last', () => {
   const evening = eveningPrompts('2031-09-19');
   assert.deepEqual(evening.filter((p) => p.ephemeral), [LEAVE]);

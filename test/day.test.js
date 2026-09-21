@@ -5,9 +5,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { dayKey, suggestedTab, dayLabel } from '../js/day.js';
+import { dayKey, suggestedTab, landingTab, dayLabel, HANDOVER_HOURS } from '../js/day.js';
 
 const at = (h, m) => new Date(2031, 8, 19, h, m);   // 19 september 2031, local
+const HOUR = 3_600_000;
 
 test('a day ends at 4am, not midnight', () => {
   assert.equal(dayKey(at(3, 59)), '2031-09-18');
@@ -30,6 +31,35 @@ test('morning until 2pm, evening after, and the small hours are evening', () => 
   assert.equal(suggestedTab(at(22, 0)), 'evening');
   assert.equal(suggestedTab(at(1, 0)), 'evening');
   assert.equal(suggestedTab(at(3, 59)), 'evening');
+});
+
+test('with nothing closed, a cold start goes by the clock and a warm one stays put', () => {
+  const morning = at(9, 30).getTime();
+  const night = at(22, 0).getTime();
+  const open = { morningClosedAt: null, eveningClosedAt: null };
+  assert.equal(landingTab({ now: morning, current: null, ...open }), 'morning');
+  assert.equal(landingTab({ now: night, current: null, ...open }), 'evening');
+  assert.equal(landingTab({ now: morning, current: 'evening', ...open }), 'evening');
+  assert.equal(landingTab({ now: night, current: 'morning', ...open }), 'morning');
+});
+
+test('a closed morning hands over to the evening after a few hours, not before', () => {
+  const now = at(13, 0).getTime();
+  const closed = (hoursAgo) => ({ morningClosedAt: now - hoursAgo * HOUR, eveningClosedAt: null });
+  assert.equal(HANDOVER_HOURS, 3);
+  assert.equal(landingTab({ now, current: 'morning', ...closed(1) }), 'morning');
+  assert.equal(landingTab({ now, current: 'morning', ...closed(2.99) }), 'morning');
+  assert.equal(landingTab({ now, current: 'morning', ...closed(3) }), 'evening');
+  assert.equal(landingTab({ now, current: null, ...closed(8) }), 'evening');
+  // A flag whose time could not be read counts as long ago.
+  assert.equal(landingTab({ now, current: 'morning', morningClosedAt: 0, eveningClosedAt: null }), 'evening');
+});
+
+test('a closed evening is the evening, whatever else is true', () => {
+  const now = at(23, 0).getTime();
+  assert.equal(landingTab({ now, current: 'morning', morningClosedAt: null, eveningClosedAt: now - HOUR }), 'evening');
+  assert.equal(landingTab({ now, current: null, morningClosedAt: now - 10 * HOUR, eveningClosedAt: now }), 'evening');
+  assert.equal(landingTab({ now: at(9, 0).getTime(), current: 'morning', morningClosedAt: null, eveningClosedAt: 0 }), 'evening');
 });
 
 test('the label is the weekday, day and month, lowercase, no year', () => {
